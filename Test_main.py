@@ -178,5 +178,5 @@ class Test_after_authorization:
         page.locator('[data-test="add-to-cart-sauce-labs-backpack"]').click()  # добавление первого товара в корзину
         page.locator('[data-test="add-to-cart-sauce-labs-bike-light"]').click()  # добавление второго товара в корзину
         assert page.locator(".shopping_cart_badge").inner_text() == "2"  # проверка что индикатор количества товаров в корзине отображает корректное количество
-        )  # проверка что индикатор количества товаров в корзине отображает корректное количество
+
 
