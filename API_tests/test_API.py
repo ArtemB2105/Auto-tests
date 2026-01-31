@@ -1,24 +1,52 @@
 import requests
 import pytest
+import allure
 
-def test_add_object(): #создание объекта
-    object_id = {
-        "name": "MacBook Pro 16",
-        "data": {
+
+@allure.feature("CRUD операции с объектами")
+@allure.story("Создание объекта")
+@pytest.mark.parametrize("object_data", [
+    { "name": "MacBook Pro 16",
+      "data": { 
             "year": 2021,
             "price": 999.99,
             "CPU model": "Test CPU",
             "Hard disk size": "512 GB",
         },
-    }
-    responce = requests.post("https://api.restful-api.dev/objects", json=object_id)
-    assert responce.status_code == 200
-    responce = requests.post("https://api.restful-api.dev/objects", json=object_id).json()
-    assert responce["name"] == "MacBook Pro 16"
+    },
+    { "name": "Dell XPS 13",
+        "data": {
+            "year": 2020,
+            "price": 1199.99,
+            "CPU model": "Intel Core i7",
+            "Hard disk size": "1 TB",
+        },
+    },
+    { "name": "Lenovo ThinkPad X1 Carbon",
+        "data": {
+            "year": 2019,
+            "price": 1399.99,
+            "CPU model": "Intel Core i5",
+            "Hard disk size": "256 GB",
+        },
+    },
+])
+def test_add_object(object_data): 
+    response = requests.post("https://api.restful-api.dev/objects", json=object_data)
+    assert response.status_code == 200
+    
+    response_data = response.json()
+    assert response_data["name"] == object_data["name"]
+    assert "id" in response_data
+    assert response_data["data"]["year"] == object_data["data"]["year"]
+    assert response_data["data"]["price"] == object_data["data"]["price"]
+    
 
 
-
-def test_get_object(create_test_object): #получение объекта
+@allure.feature("CRUD операции с объектами")
+@allure.story("Получение объекта")
+@pytest.mark.usefixtures("create_test_object")
+def test_get_object(create_test_object):
     object_id = create_test_object
     responce = requests.get(f"https://api.restful-api.dev/objects/{object_id}").json()
     assert responce["id"] == object_id
@@ -26,7 +54,10 @@ def test_get_object(create_test_object): #получение объекта
     assert responce.status_code != 404
 
 
-def test_update_object(create_test_object): #обновление данных объекта
+@allure.feature("CRUD операции с объектами")
+@allure.story("Обновление объекта")
+@pytest.mark.usefixtures("create_test_object")
+def test_update_object(create_test_object): 
     object_id = create_test_object
     update_data = {
         "name": "Apple MacBook Pro 16 - Updated",
@@ -43,7 +74,10 @@ def test_update_object(create_test_object): #обновление данных �
     assert responce.status_code == 200
 
 
-def test_delete_object(create_test_object): #удаление объекта
+@allure.feature("CRUD операции с объектами")
+@allure.story("Удаление объекта")
+@pytest.mark.usefixtures("create_test_object")
+def test_delete_object(create_test_object): 
     object_id = create_test_object
     responce = requests.delete(f"https://api.restful-api.dev/objects/{object_id}")
     assert responce.status_code == 200
@@ -51,7 +85,10 @@ def test_delete_object(create_test_object): #удаление объекта
     assert responce.status_code == 404
 
 
-def test_partial_update_object(create_test_object): #частичное обновление объекта
+@allure.feature("CRUD операции с объектами")
+@allure.story("Частичное обновление объекта")
+@pytest.mark.usefixtures("create_test_object")
+def test_partial_update_object(create_test_object): 
     object_id = create_test_object
     partial_update_data = {
         "data": {
@@ -64,19 +101,27 @@ def test_partial_update_object(create_test_object): #частичное обно
     assert responce.status_code == 200
 
 
-def test_get_nonexistent_object(): #попытка получить несуществующий объект
+@allure.feature("Негативные тесты для API управления объектами")
+@allure.story("Получение несуществующего объекта")
+@pytest.mark.usefixtures("create_test_object")
+def test_get_nonexistent_object(): 
     nonexistent_id = "nonexistent-id-12345"
     responce = requests.get(f"https://api.restful-api.dev/objects/{nonexistent_id}")
     assert responce.status_code == 404
 
 
-def test_delete_nonexistent_object(): #попытка удалить несуществующий объект
+@allure.feature("Негативные тесты для API управления объектами")
+@allure.story("Удаление несуществующего объекта")
+@pytest.mark.usefixtures("create_test_object")
+def test_delete_nonexistent_object(): 
     nonexistent_id = "nonexistent-id-12345"
     responce = requests.delete(f"https://api.restful-api.dev/objects/{nonexistent_id}")
     assert responce.status_code == 404
 
 
-def test_create_object_invalid_data(): #попытка создать объект с некорректными данными
+@allure.feature("Негативные тесты для API управления объектами")
+@allure.story("Создание объекта с некорректными данными")
+def test_create_object_invalid_data(): 
     invalid_object = {
         "name": "",  # Пустое имя
         "data": {
@@ -90,7 +135,10 @@ def test_create_object_invalid_data(): #попытка создать объек
     assert responce.status_code == 400  # Ожидаем ошибку клиента (Bad Request)
 
 
-def test_update_object_invalid_data(create_test_object): #попытка обновить объект с некорректными данными
+@allure.feature("Негативные тесты для API управления объектами")
+@allure.story("Обновление объекта с некорректными данными")
+@pytest.mark.usefixtures("create_test_object")
+def test_update_object_invalid_data(create_test_object): 
     object_id = create_test_object
     invalid_update_data = {
         "name": "Valid Name",
@@ -105,6 +153,8 @@ def test_update_object_invalid_data(create_test_object): #попытка обн�
     assert responce.status_code == 400  # Ожидаем ошибку клиента (Bad Request)
 
 
+@allure.feature("CRUD операции с объектами")
+@allure.story("Список всех объектов")
 def test_get_all_objects(): #получение списка всех объектов
     responce = requests.get("https://api.restful-api.dev/objects")
     assert responce.status_code == 200
@@ -112,7 +162,9 @@ def test_get_all_objects(): #получение списка всех объек
     assert isinstance(responce, list)
 
 
-def test_create_duplicate_object(): #попытка создать дубликат объекта
+@allure.feature("Негативные тесты для API управления объектами")
+@allure.story("Создание дубликата объекта")
+def test_create_duplicate_object(): 
     object_data = {
         "name": "Duplicate Object",
         "data": {
@@ -128,5 +180,6 @@ def test_create_duplicate_object(): #попытка создать дублик�
     # Очистка созданного объекта
     created_id = responce1.json().get("id")
     requests.delete(f"https://api.restful-api.dev/objects/{created_id}")
+
 
 
