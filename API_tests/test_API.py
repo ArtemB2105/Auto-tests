@@ -45,18 +45,16 @@ def test_add_object(object_data):
 
 @allure.feature("CRUD операции с объектами")
 @allure.story("Получение объекта")
-@pytest.mark.usefixtures("create_test_object")
 def test_get_object(create_test_object):
     object_id = create_test_object
-    responce = requests.get(f"https://api.restful-api.dev/objects/{object_id}").json()
-    assert responce["id"] == object_id
-    responce = requests.get(f"https://api.restful-api.dev/objects/{object_id}")
-    assert responce.status_code != 404
+    response = requests.get(f"https://api.restful-api.dev/objects/{object_id}").json()
+    assert response["id"] == object_id
+    response = requests.get(f"https://api.restful-api.dev/objects/{object_id}")
+    assert response.status_code != 404
 
 
 @allure.feature("CRUD операции с объектами")
 @allure.story("Обновление объекта")
-@pytest.mark.usefixtures("create_test_object")
 def test_update_object(create_test_object): 
     object_id = create_test_object
     update_data = {
@@ -68,26 +66,24 @@ def test_update_object(create_test_object):
             "Hard disk size": "2 TB",
         },
     }
-    responce = requests.put(f"https://api.restful-api.dev/objects/{object_id}", json=update_data).json()
-    assert responce["name"] == update_data["name"]
-    responce = requests.put(f"https://api.restful-api.dev/objects/{object_id}", json=update_data)
-    assert responce.status_code == 200
+    response = requests.put(f"https://api.restful-api.dev/objects/{object_id}", json=update_data).json()
+    assert response["name"] == update_data["name"]
+    response = requests.put(f"https://api.restful-api.dev/objects/{object_id}", json=update_data)
+    assert response.status_code == 200
 
 
 @allure.feature("CRUD операции с объектами")
 @allure.story("Удаление объекта")
-@pytest.mark.usefixtures("create_test_object")
 def test_delete_object(create_test_object): 
     object_id = create_test_object
-    responce = requests.delete(f"https://api.restful-api.dev/objects/{object_id}")
-    assert responce.status_code == 200
-    responce = requests.get(f"https://api.restful-api.dev/objects/{object_id}")
-    assert responce.status_code == 404
+    response = requests.delete(f"https://api.restful-api.dev/objects/{object_id}")
+    assert response.status_code == 200
+    response = requests.get(f"https://api.restful-api.dev/objects/{object_id}")
+    assert response.status_code == 404
 
 
 @allure.feature("CRUD операции с объектами")
 @allure.story("Частичное обновление объекта")
-@pytest.mark.usefixtures("create_test_object")
 def test_partial_update_object(create_test_object): 
     object_id = create_test_object
     partial_update_data = {
@@ -95,28 +91,26 @@ def test_partial_update_object(create_test_object):
             "price": 1499.99
         }
     }
-    responce = requests.patch(f"https://api.restful-api.dev/objects/{object_id}", json=partial_update_data).json()
-    assert responce['data']["price"] == partial_update_data['data']["price"]
-    responce = requests.patch(f"https://api.restful-api.dev/objects/{object_id}", json=partial_update_data)
-    assert responce.status_code == 200
+    response = requests.patch(f"https://api.restful-api.dev/objects/{object_id}", json=partial_update_data).json()
+    assert response['data']["price"] == partial_update_data['data']["price"]
+    response = requests.patch(f"https://api.restful-api.dev/objects/{object_id}", json=partial_update_data)
+    assert response.status_code == 200
 
 
 @allure.feature("Негативные тесты для API управления объектами")
 @allure.story("Получение несуществующего объекта")
-@pytest.mark.usefixtures("create_test_object")
 def test_get_nonexistent_object(): 
     nonexistent_id = "nonexistent-id-12345"
-    responce = requests.get(f"https://api.restful-api.dev/objects/{nonexistent_id}")
-    assert responce.status_code == 404
+    response = requests.get(f"https://api.restful-api.dev/objects/{nonexistent_id}")
+    assert response.status_code == 404
 
 
 @allure.feature("Негативные тесты для API управления объектами")
 @allure.story("Удаление несуществующего объекта")
-@pytest.mark.usefixtures("create_test_object")
 def test_delete_nonexistent_object(): 
     nonexistent_id = "nonexistent-id-12345"
-    responce = requests.delete(f"https://api.restful-api.dev/objects/{nonexistent_id}")
-    assert responce.status_code == 404
+    response = requests.delete(f"https://api.restful-api.dev/objects/{nonexistent_id}")
+    assert response.status_code == 404
 
 
 @allure.feature("Негативные тесты для API управления объектами")
@@ -131,13 +125,12 @@ def test_create_object_invalid_data():
             "Hard disk size": "512 GB",
         },
     }
-    responce = requests.post("https://api.restful-api.dev/objects", json=invalid_object)
-    assert responce.status_code == 400  # Ожидаем ошибку клиента (Bad Request)
+    response = requests.post("https://api.restful-api.dev/objects", json=invalid_object)
+    assert response.status_code == 400  # Ожидаем ошибку клиента (Bad Request)
 
 
 @allure.feature("Негативные тесты для API управления объектами")
 @allure.story("Обновление объекта с некорректными данными")
-@pytest.mark.usefixtures("create_test_object")
 def test_update_object_invalid_data(create_test_object): 
     object_id = create_test_object
     invalid_update_data = {
@@ -149,17 +142,17 @@ def test_update_object_invalid_data(create_test_object):
             "Hard disk size": "2 TB",
         },
     }
-    responce = requests.put(f"https://api.restful-api.dev/objects/{object_id}", json=invalid_update_data)
-    assert responce.status_code == 400  # Ожидаем ошибку клиента (Bad Request)
+    response = requests.put(f"https://api.restful-api.dev/objects/{object_id}", json=invalid_update_data)
+    assert response.status_code == 400  # Ожидаем ошибку клиента (Bad Request)
 
 
 @allure.feature("CRUD операции с объектами")
 @allure.story("Список всех объектов")
 def test_get_all_objects(): #получение списка всех объектов
-    responce = requests.get("https://api.restful-api.dev/objects")
-    assert responce.status_code == 200
-    responce = requests.get("https://api.restful-api.dev/objects").json()
-    assert isinstance(responce, list)
+    response = requests.get("https://api.restful-api.dev/objects")
+    assert response.status_code == 200
+    response = requests.get("https://api.restful-api.dev/objects").json()
+    assert isinstance(response, list)
 
 
 @allure.feature("Негативные тесты для API управления объектами")
@@ -174,12 +167,11 @@ def test_create_duplicate_object():
             "Hard disk size": "512 GB",
         },
     }
-    responce1 = requests.post("https://api.restful-api.dev/objects", json=object_data)
-    responce2 = requests.post("https://api.restful-api.dev/objects", json=object_data)
-    assert responce2.status_code == 409  # Ожидаем ошибку конфликта (Conflict)
+    responcs1 = requests.post("https://api.restful-api.dev/objects", json=object_data)
+    responcs2 = requests.post("https://api.restful-api.dev/objects", json=object_data)
+    assert responcs2.status_code == 409  # Ожидаем ошибку конфликта (Conflict)
     # Очистка созданного объекта
-    created_id = responce1.json().get("id")
+    created_id = responcs1.json().get("id")
     requests.delete(f"https://api.restful-api.dev/objects/{created_id}")
-
 
 
