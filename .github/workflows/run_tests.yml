@@ -1,36 +1,55 @@
-name: Tests with Allure
+name: Run Tests
 
-on: push
+on:
+  # Автоматический запуск
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  
+  # Ручной запуск - ОБЯЗАТЕЛЬНО ДОБАВИТЬ workflow_dispatch
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Select test type'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - api
+          - ui
 
 jobs:
   test:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
       
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       
-      - run: |
+      - name: Install dependencies
+        run: |
           pip install pytest allure-pytest playwright
           playwright install chromium
       
-      - run: |
+      - name: Run API tests
+        if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'api'
+        run: |
+          pytest API_tests/ -v --alluredir=allure-results
+      
+      - name: Run UI tests
+        if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'ui'
+        run: |
           pytest UI_E2E_tests/ -v --alluredir=allure-results
       
-      - name: Publish Allure Report
+      - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
-          name: allure-report
+          name: allure-results
           path: allure-results/
-      
-      - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v2.0
-        with:
-          publish-dir: './allure-report'
-          production-branch: main
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
