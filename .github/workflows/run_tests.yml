@@ -1,44 +1,52 @@
 name: UI E2E Tests with Allure Report
+
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch: # Позволяет запускать workflow вручную из интерфейса GitHub
 
 jobs:
-  test:
+  test-and-deploy-report:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-    
+      contents: write # Необходимое разрешение для публикации на GitHub Pages
+
     steps:
+      # 1. Получаем код из репозитория
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
+      # 2. Настраиваем Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
+      # 3. Устанавливаем все зависимости
       - name: Install dependencies
         run: |
           pip install pytest allure-pytest playwright
           playwright install chromium
           playwright install-deps
-      
+
+      # 4. Запускаем тесты и собираем данные для Allure
       - name: Run tests with Allure
         run: |
           pytest UI_E2E_tests/Test_main.py -v --alluredir=allure-results
-      
+
+      # 5. Генерируем красивый HTML-отчёт из собранных данных
       - name: Generate Allure Report
         uses: simple-elf/allure-report-action@master
+        if: always() # Генерируем отчёт, даже если некоторые тесты упали
         with:
           allure_results: allure-results
           allure_report: allure-report
           keep_reports: true
-      
-      - name: Deploy to GitHub Pages
+
+      # 6. Публикуем сгенерированный отчёт на GitHub Pages
+      - name: Deploy report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report
-          keep_files: false
+          keep_files: false # Очищает старые отчёты при новом деплое
