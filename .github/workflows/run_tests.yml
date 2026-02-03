@@ -11,10 +11,7 @@ on:
         required: true
         default: 'all'
         type: choice
-        options:
-          - all
-          - api
-          - ui
+        options: [all, api, ui]
 
 jobs:
   test:
@@ -44,18 +41,32 @@ jobs:
           cd UI_E2E_tests
           pytest tests/ -v --alluredir=../allure-results
       
+      - name: Install Java (для Allure)
+        if: always()
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'microsoft'
+          java-version: '11'
+      
+      - name: Install Allure CLI
+        if: always()
+        run: |
+          # Скачиваем Allure
+          curl -L -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.15.0/allure-2.15.0.zip
+          Expand-Archive -Path allure.zip -DestinationPath allure-cli
+          # Добавляем в PATH
+          echo "$env:GITHUB_WORKSPACE\allure-cli\allure-2.15.0\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+      
       - name: Generate Allure Report
         if: always()
-        uses: simple-elf/allure-report-action@master
-        with:
-          allure_results: allure-results
-          allure_report: allure-report
+        run: |
+          allure generate allure-results -o allure-report --clean
       
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-report
+          name: test-report-${{ github.run_number }}
           path: |
             allure-report/
             allure-results/
