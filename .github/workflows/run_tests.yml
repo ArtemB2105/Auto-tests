@@ -1,4 +1,4 @@
-name: UI E2E Tests
+name: Tests with Allure
 
 on: push
 
@@ -13,25 +13,24 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: Install dependencies
-        run: |
+      - run: |
           pip install pytest allure-pytest playwright
           playwright install chromium
       
-      - name: Run tests with Allure
-        run: |
+      - run: |
           pytest UI_E2E_tests/ -v --alluredir=allure-results
       
-      - name: Generate Allure report
-        if: always()
-        run: |
-          pip install allure-pytest[allure-combine]
-          allure generate allure-results --clean -o allure-report
-      
-      - name: Upload Allure report
-        if: always()
+      - name: Publish Allure Report
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
-          path: allure-report/
-          retention-days: 7
+          path: allure-results/
+      
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v2.0
+        with:
+          publish-dir: './allure-report'
+          production-branch: main
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
