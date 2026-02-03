@@ -1,32 +1,123 @@
 name: Tests with Allure
 
-on: push
+on:
+  # Автоматический запуск при пуше
+  push:
+    branches: [ main, master ]
+  
+  # Ручной запуск из интерфейса GitHub
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Выберите тип тестов для запуска'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - api
+          - ui
+          - specific
+      test_path:
+        description: 'Путь к конкретному тесту (если выбран specific)'
+        required: false
+        default: ''
+        type: string
+      python_version:
+        description: 'Версия Python'
+        required: false
+        default: '3.11'
+        type: choice
+        options:
+          - '3.10'
+          - '3.11'
+          - '3.12'
+      os:
+        description: 'Операционная система'
+        required: false
+        default: 'windows'
+        type: choice
+        options:
+          - windows
+          - ubuntu
+          - macos
 
 jobs:
   test:
-    runs-on: windows-latest
+    runs-on: ${{ github.event.inputs.os || 'windows' }}-latest
     
     steps:
-      - uses: actions/checkout@v4
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
       
-      - uses: actions/setup-python@v5
+      - name: 🐍 Setup Python ${{ github.event.inputs.python_version || '3.11' }}
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ github.event.inputs.python_version || '3.11' }}
       
-      - run: |
-          pip install pytest allure-pytest playwright
+      - name: 📦 Install dependencies
+        run: |
+          pip install pytest allure-pytest playwright requests
           playwright install chromium
+          playwright install-deps
       
-      - run: |
-          pytest UI_E2E_tests/ -v --alluredir=allure-results
+      # Условный запуск тестов
+      - name: 🧪 Run Tests
+        id: run_tests
+        run: |
+          echo "Запуск тестов..."
+          
+          # Определяем какие тесты запускать
+          TEST_TYPE="${{ github.event.inputs.test_type || 'all' }}"
+          
+          if [ "$TEST_TYPE" == "all" ]; then
+            echo "Запуск ВСЕХ тестов..."
+            pytest API_tests/ UI_E2E_tests/ -v --alluredir=allure-results
+          
+          elif [ "$TEST_TYPE" == "api" ]; then
+            echo "Запуск только API тестов..."
+            pytest API_tests/ -v --alluredir=allure-results
+          
+          elif [ "$TEST_TYPE" == "ui" ]; then
+            echo "Запуск только UI тестов..."
+            pytest UI_E2E_tests/ -v --alluredir=allure-results
+          
+          elif [ "$TEST_TYPE" == "specific" ]; then
+            SPECIFIC_PATH="${{ github.event.inputs.test_path }}"
+            if [ -n "$SPECIFIC_PATH" ]; then
+              echo "Запуск теста по пути: $SPECIFIC_PATH"
+              pytest "$SPECIFIC_PATH" -v --alluredir=allure-results
+            else
+              echo "❌ Ошибка: не указан путь к тесту"
+              exit 1
+            fi
+          fi
       
-      - name: Publish Allure Report
+      - name: 📊 Generate Allure Report
+        if: always()
+        run: |
+          # Устанавливаем Allure CLI
+          pip install allure-python-commons
+          # Генерируем отчет
+          allure generate allure-results -o allure-report --clean
+      
+      - name: 📤 Upload Allure Results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: allure-report
+          name: allure-results-${{ github.run_id }}
           path: allure-results/
       
-      - name: Deploy to Netlify
+      - name: 🌐 Upload Allure Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-${{ github.run_id }}
+          path: allure-report/
+      
+      # Опционально: Деплой отчета на Netlify
+      - name: 🚀 Deploy to Netlify (Optional)
+        if: success() && github.event_name == 'workflow_dispatch'
         uses: nwtgck/actions-netlify@v2.0
         with:
           publish-dir: './allure-report'
