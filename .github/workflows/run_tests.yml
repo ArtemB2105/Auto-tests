@@ -21,13 +21,14 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest allure-pytest playwright requests  # ← ДОБАВЬТЕ requests
+          pip install pytest allure-pytest playwright
           playwright install chromium
           playwright install-deps chromium
       
       - name: Run tests
         run: |
-          pytest --maxfail=1 --disable-warnings -v --alluredir=allure-results --ignore=API_tests  # Игнорируем API тесты пока
+          # Запускаем тесты из папки UI_E2E_tests
+          pytest UI_E2E_tests/ --maxfail=1 --disable-warnings -v --alluredir=allure-results
       
       - name: Upload test results
         if: always()
