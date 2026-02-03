@@ -1,4 +1,4 @@
-name: UI E2E Tests with HTML Report
+name: UI E2E Tests with Allure Report
 on:
   push:
     branches: [ main ]
@@ -6,9 +6,9 @@ on:
 
 jobs:
   test:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest  # Linux для работы с Allure Action
     permissions:
-      contents: write
+      contents: write  # важно для деплоя на GitHub Pages
     
     steps:
       - name: Checkout repository
@@ -21,12 +21,20 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install pytest allure-pytest pytest-html playwright
+          pip install pytest allure-pytest playwright
           playwright install chromium
+          playwright install-deps
       
-      - name: Run tests and generate HTML report
+      - name: Run tests with Allure
         run: |
-          pytest UI_E2E_tests/ -v --html=allure-report/index.html --self-contained-html
+          pytest UI_E2E_tests/ -v --alluredir=allure-results
+      
+      - name: Generate Allure Report
+        uses: simple-elf/allure-report-action@master
+        with:
+          allure_results: allure-results
+          allure_report: allure-report
+          keep_reports: true
       
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
