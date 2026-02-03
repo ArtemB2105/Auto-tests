@@ -3,7 +3,7 @@ name: UI E2E Tests
 on: push
 
 jobs:
-  ui-tests:
+  test:
     runs-on: windows-latest
     
     steps:
@@ -15,13 +15,16 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: Install Playwright
+      - name: Install dependencies
         run: |
-          pip install pytest playwright
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install allure-pytest  # ← ОБЯЗАТЕЛЬНО!
+          pip install playwright
           playwright install chromium
+          playwright install-deps chromium
       
       - name: Run UI tests
         run: |
-          # Переходим в папку с UI тестами и запускаем
-          cd UI_E2E_tests
-          pytest Test_main.py -v
+          # Запускаем UI тесты
+          pytest UI_E2E_tests/ -v
