@@ -1,17 +1,6 @@
 name: Tests with Allure
 
-on:
-  push:
-    branches: [ main, master ]
-  
-  workflow_dispatch:
-    inputs:
-      test_type:
-        description: 'Тип тестов'
-        required: true
-        default: 'all'
-        type: choice
-        options: [all, api, ui]
+on: push
 
 jobs:
   test:
@@ -24,49 +13,24 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: Install dependencies
-        run: |
+      - run: |
           pip install pytest allure-pytest playwright
           playwright install chromium
       
-      - name: Run API tests
-        if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'api'
-        run: |
-          cd API_tests
-          pytest test_API.py -v --alluredir=../allure-results
+      - run: |
+          pytest UI_E2E_tests/ -v --alluredir=allure-results
       
-      - name: Run UI tests
-        if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'ui'
-        run: |
-          cd UI_E2E_tests
-          pytest tests/ -v --alluredir=../allure-results
-      
-      - name: Install Java (для Allure)
-        if: always()
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'microsoft'
-          java-version: '11'
-      
-      - name: Install Allure CLI
-        if: always()
-        run: |
-          # Скачиваем Allure
-          curl -L -o allure.zip https://github.com/allure-framework/allure2/releases/download/2.15.0/allure-2.15.0.zip
-          Expand-Archive -Path allure.zip -DestinationPath allure-cli
-          # Добавляем в PATH
-          echo "$env:GITHUB_WORKSPACE\allure-cli\allure-2.15.0\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
-      
-      - name: Generate Allure Report
-        if: always()
-        run: |
-          allure generate allure-results -o allure-report --clean
-      
-      - name: Upload test results
-        if: always()
+      - name: Publish Allure Report
         uses: actions/upload-artifact@v4
         with:
-          name: test-report-${{ github.run_number }}
-          path: |
-            allure-report/
-            allure-results/
+          name: allure-report
+          path: allure-results/
+      
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v2.0
+        with:
+          publish-dir: './allure-report'
+          production-branch: main
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
