@@ -28,4 +28,11 @@ jobs:
       
       - name: Run tests
         run: |
-          pytest proj/ --maxfail=1 --disable-warnings -v --alluredir=allure-results
+          pytest test_autorization.py --maxfail=1 --disable-warnings -v --alluredir=allure-results
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-report
+          path: allure-results
