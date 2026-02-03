@@ -1,38 +1,27 @@
-name: automated tests
+name: UI E2E Tests
 
 on: push
 
-jobs: 
-  test:
+jobs:
+  ui-tests:
     runs-on: windows-latest
-
+    
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       
-      - name: Install Chrome
-        uses: browser-actions/setup-chrome@v1
-      
-      - name: Install dependencies
+      - name: Install Playwright
         run: |
-          python -m pip install --upgrade pip
-          pip install pytest allure-pytest playwright
+          pip install pytest playwright
           playwright install chromium
-          playwright install-deps chromium
       
-      - name: Run tests
+      - name: Run UI tests
         run: |
-          # Запускаем тесты из папки UI_E2E_tests
-          pytest UI_E2E_tests/ --maxfail=1 --disable-warnings -v --alluredir=allure-results
-      
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-results
-          path: allure-results/
+          # Переходим в папку с UI тестами и запускаем
+          cd UI_E2E_tests
+          pytest Test_main.py -v
