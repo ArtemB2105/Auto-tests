@@ -10,7 +10,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: project_YT
+        working-directory: UI_framework/project_YT
 
     steps:
       - uses: actions/checkout@v4
@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
-          cache-dependency-path: project_YT/requirements.txt
+          cache-dependency-path: UI_framework/project_YT/requirements.txt
 
       - name: Install dependencies
         run: |
@@ -31,8 +31,7 @@ jobs:
       - name: Run tests
         env:
           CI: "true"
-        run: |
-          pytest tests/frontend/shop_services -v --alluredir=allure-results
+        run: pytest tests/frontend/shop_services -v --alluredir=allure-results
 
       - name: Install Allure CLI
         if: always()
@@ -48,15 +47,5 @@ jobs:
         with:
           name: allure-report
           path: |
-            project_YT/allure-results
-            project_YT/allure-report
-
-      - name: Deploy to Netlify
-        if: always() && github.ref == 'refs/heads/main'
-        uses: nwtgck/actions-netlify@v2.0
-        with:
-          publish-dir: "./project_YT/allure-report"
-          production-branch: main
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+            UI_framework/project_YT/allure-results
+            UI_framework/project_YT/allure-report
