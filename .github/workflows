@@ -1,0 +1,68 @@
+name: Tests with Allure
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve project directory
+        shell: bash
+        run: |
+          if [ -d "project_YT" ]; then
+            echo "PROJECT_DIR=project_YT" >> "$GITHUB_ENV"
+          elif [ -d "UI_framework/project_YT" ]; then
+            echo "PROJECT_DIR=UI_framework/project_YT" >> "$GITHUB_ENV"
+          else
+            echo "project_YT directory not found in repository"
+            pwd
+            ls -la
+            exit 1
+          fi
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: ${{ env.PROJECT_DIR }}/requirements-ci.txt
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r "${PROJECT_DIR}/requirements-ci.txt"
+          playwright install --with-deps chromium
+
+      - name: Run tests
+        shell: bash
+        env:
+          CI: "true"
+        run: |
+          pytest "${PROJECT_DIR}/tests/frontend/shop_services" -v --alluredir="${PROJECT_DIR}/allure-results"
+
+      - name: Install Allure CLI
+        if: always()
+        shell: bash
+        run: npm install -g allure-commandline
+
+      - name: Generate Allure report
+        if: always()
+        shell: bash
+        run: |
+          allure generate "${PROJECT_DIR}/allure-results" --clean -o "${PROJECT_DIR}/allure-report"
+
+      - name: Upload Allure artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: |
+            ${{ env.PROJECT_DIR }}/allure-results
+            ${{ env.PROJECT_DIR }}/allure-report
