@@ -22,3 +22,4 @@ def test_login_no_valid_creds(login_page):
 @allure.title("Не успешная авторизация вводом пустых строк")
 def test_login_empty_creds(login_page):
     login_page.login()
+    
