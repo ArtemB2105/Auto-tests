@@ -1,6 +1,6 @@
 import allure
-from playwright.sync_api import Locator
-from playwright.sync_api import Page
+from os.path import basename
+from playwright.sync_api import Locator, LocatorAssertions, Page, expect
 
 from project_YT.config import TestConfig
 
@@ -36,6 +36,32 @@ class BasePage:
     def get_all_elements(self, selector: str,) -> list[Locator]:
         self.page.locator(selector).first.wait_for(timeout=self.default_timeout, state="attached")
         return self.page.locator(selector).all()
+
+
+    @allure.step("Проверка для элемента: {selector}")
+    def expect(self, selector: str) -> LocatorAssertions:
+        return expect(self.page.locator(selector))
+
+    @allure.step("Получение текста элемента: {selector}")
+    def get_text(self, selector: str) -> str:
+        return self.locator(selector).text_content()
+
+    
+
+
+    @allure.step("Получение скриншота")
+    def take_screenshot(self, path_to_save: str = "") -> None:
+        """
+        Делает скриншот и прикладывает его к Allure-отчету.
+        """
+        screenshot_bytes = self.page.screenshot(path=path_to_save or None, full_page=True)
+        attachment_name = basename(path_to_save) if path_to_save else "screenshot.png"
+        allure.attach(
+            screenshot_bytes,
+            name=attachment_name,
+            attachment_type=allure.attachment_type.PNG
+        )
+
     
 
         
