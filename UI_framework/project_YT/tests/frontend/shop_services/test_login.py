@@ -19,7 +19,7 @@ class TestLogin:
 
     @allure.title("Не успешная авторизация вводом не валидных данных")
     def test_login_no_valid_creds(self, login_page):
-        login_page.login(username="standard_user123", password="secret_sauce123")
+        login_page.login(username="standard_user", password="secret_sauce")
         login_page.get_error_message(expected_text=INVALID_CREDS_ERROR)
 
 

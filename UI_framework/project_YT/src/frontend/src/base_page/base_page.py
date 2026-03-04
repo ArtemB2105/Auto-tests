@@ -50,18 +50,10 @@ class BasePage:
 
 
     @allure.step("Получение скриншота")
-    def take_screenshot(self, path_to_save: str = "") -> None:
-        """
-        Делает скриншот и прикладывает его к Allure-отчету.
-        """
-        screenshot_bytes = self.page.screenshot(path=path_to_save or None, full_page=True)
-        attachment_name = basename(path_to_save) if path_to_save else "screenshot.png"
-        allure.attach(
-            screenshot_bytes,
-            name=attachment_name,
-            attachment_type=allure.attachment_type.PNG
-        )
-
+    def attach_screenshot(self, path_to_save: str) -> None:
+        screenshot = self.page.screenshot(full_page=True, path=path_to_save, type="png")
+        allure.attach(screenshot, name="screenshot.png",attachment_type=allure.attachment_type.PNG) 
+        
     
 
         

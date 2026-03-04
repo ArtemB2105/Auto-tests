@@ -1,6 +1,7 @@
 
 
 import time
+from project_YT.src.frontend.services.shop.elements.navbar_element.navbar_element import NavbarElement
 from project_YT.src.frontend.services.shop.pages.catalog_page.models import Good
 from project_YT.src.frontend.src.base_page.base_page import BasePage
 
@@ -14,9 +15,14 @@ class CatalogPage:
 
     def __init__(self, base_page : BasePage):
         self._base_page = base_page
+        self.navbar_elem = NavbarElement(self)
 
 
-    
+    def open(self) -> "CatalogPage":
+        self.navbar_elem.open_catalog_page()
+        return self
+
+
     def get_all_goods(self) -> list[Good]:
         goods_elems = self._base_page.get_all_elements(selector=CatalogPageLocators.ITEM)
         all_goods = []
